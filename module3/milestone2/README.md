@@ -24,11 +24,11 @@ This milestone represents the **Model Serving & Deployment phase** of the ML lif
 This mirrors production-grade inference deployment practices.
 ---
 ## API Endpoints
-### Health Check
+Health Check
 GET `/`
 Response:
 { "status": "ok" }
-### Prediction Endpoint
+Prediction Endpoint
 POST `/predict`
 Request:{ "x": 3 }
 Response:{ "prediction": 6 }
@@ -86,22 +86,6 @@ Dockerfile design includes:
 - `--no-cache-dir` installation
 - Minimal runtime footprint
 - Reduced attack surface
----
-
-## Repository Structure
-module3/milestone2
-│
-├── app/
-│ ├── app.py
-│ └── requirements.txt
-│
-├── tests/
-│ └── test_app.py
-│
-├── Dockerfile
-├── .dockerignore
-├── RUNBOOK.md
-└── README.md
 ---
 
 ## Key Concepts Demonstrated
