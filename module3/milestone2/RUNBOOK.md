@@ -120,3 +120,9 @@ Solution:
 Ensure CI Python version matches local version
 Install test requirements
 End of Runbook.
+
+CI Pipeline Summary
+Triggered on semantic tag push
+Runs tests before build
+Fails fast if tests break
+Builds container only after successful validation
