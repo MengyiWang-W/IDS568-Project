@@ -9,6 +9,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -19,13 +20,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd module3/milestone2/app
-          pip install -r requirements.txt
+          pip install -r module3/milestone2/app/requirements.txt
 
       - name: Run tests
+        working-directory: module3/milestone2
         run: |
-          cd module3/milestone2
-          pytest
+          PYTHONPATH=. pytest
 
   build:
     needs: test
