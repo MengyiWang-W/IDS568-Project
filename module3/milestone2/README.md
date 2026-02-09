@@ -24,11 +24,11 @@ This milestone represents the **Model Serving & Deployment phase** of the ML lif
 This mirrors production-grade inference deployment practices.
 ---
 ## API Endpoints
-Health Check
+1. Health Check
 GET `/`
 Response:
 { "status": "ok" }
-Prediction Endpoint
+2. Prediction Endpoint
 POST `/predict`
 Request:{ "x": 3 }
 Response:{ "prediction": 6 }
