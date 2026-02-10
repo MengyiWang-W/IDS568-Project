@@ -50,7 +50,7 @@ pytest -v
 ## Docker Usage
 Build image:
 docker build -t ml-service .
-
+![Docker Hub Tag](screenshots/ml_service.png)
 Run container:
 docker run -p 8000:8000 ml-service
 ---
