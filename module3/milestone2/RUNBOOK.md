@@ -1,5 +1,6 @@
 ## 1. Dependency Pinning Strategy
-All Python dependencies are pinned to exact versions in requirements.txt.
+All Python dependencies are pinned to exact versions in:
+app/requirements.txt
 Example:
 fastapi==0.110.0
 uvicorn==0.29.0
@@ -9,120 +10,153 @@ httpx==0.27.0
 Pinning ensures:
 Reproducible builds
 CI consistency
-Protection against breaking changes from upstream packages
-Environment parity between local and CI/CD
+Protection against upstream breaking changes
+Environment parity between local development and CI/CD
+Stable Docker layer caching
 
 In CI, dependencies are installed using:
+```bash
 pip install -r module3/milestone2/app/requirements.txt
-
-This guarantees consistent behavior across environments.
+```
+This guarantees deterministic behavior across environments.
 
 ## 2. Docker Image Optimization
-The Dockerfile applies the following optimizations:
-a) Slim base image
+The Dockerfile applies multiple optimization strategies.
+a) Slim Base Image
+```bash
 FROM python:3.11-slim
-Using a slim image reduces attack surface and image size.
+```
+Using a slim image reduces base OS footprint and minimizes attack surface.
 
-b) --no-cache-dir flag
+b) Multi-Stage Build
+The Dockerfile separates:
+Builder stage
+Runtime stage
+Only necessary runtime artifacts are copied into the final image.
+This prevents development dependencies and build tools from being included in production.
+
+c) No Cache Installation
+```bash
 pip install --no-cache-dir -r requirements.txt
-Prevents pip from storing cache files in the image.
+```
+Prevents pip cache files from being stored in the image, reducing layer size.
 
-c) .dockerignore usage
-The .dockerignore file excludes:
+d) .dockerignore Usage
+The .dockerignore file excludes unnecessary files such as:
 .git
-pycache
+__pycache__
 tests
-local files
-This reduces build context size.
+local artifacts
+This reduces Docker build context size and improves build performance.
 
-Image Size
-Before optimization: ~1GB (standard Python image)
-After optimization: ~200–300MB (slim + cleaned layers)
+## Image Size Optimization Results
+Measured using:docker images
+Results:
+Single-stage image size: 232MB
+Multi-stage image size: 213MB
+Size reduction: 8%
+Although the reduction is moderate, this is expected because:
+Both builds use python:3.11-slim
+No heavy build tools were installed in the single-stage version
+The application footprint is minimal
+The optimization confirms that multi-stage builds reduce unnecessary layers and runtime size.
 
 ## 3. Security Considerations
-The container is hardened with:
+The container design follows basic container security best practices:
 Minimal base image (python:3.11-slim)
 No unnecessary OS packages installed
-No secret keys stored in code
-Dependencies pinned to avoid supply chain attacks
-
-Best practices applied:
-Avoid running as root in production (future enhancement)
-Do not expose unnecessary ports
-Limit attack surface
+No hard-coded secrets in source code
+Dependencies pinned to reduce supply-chain risks
+Reduced runtime surface area
+Additional production-level enhancements (future improvements):
+Run container as non-root user
+Add vulnerability scanning (e.g., Trivy)
+Implement runtime resource limits
 
 ## 4. CI/CD Workflow Explanation
-The GitHub Actions workflow performs the following steps:
+The GitHub Actions workflow performs:
 Checkout repository
-Set up Python environment
-Install dependencies
+Set up Python 3.11
+Install pinned dependencies
 Run pytest
+Log in to Docker Hub
 Build Docker image
-Push image to container registry
-
-Trigger:
+Push image to Docker registry
+Trigger Condition
 on:
   push:
     tags:
-      - "v*.*.*"
+      - "v*"
 
-This ensures versioned releases trigger image builds.
+This ensures only semantic version tags trigger container builds.
+Example:
+git tag v1.0.36
+git push origin v1.0.36
 
-CI ensures:
-Tests must pass before image is built
-No broken code is deployed
-Reproducible builds
+CI Guarantees
+Tests must pass before image build
+Broken code cannot be deployed
+Every tagged release produces a traceable container version
+Automated publishing to registry
 
 ## 5. Versioning Strategy
 Semantic Versioning is used:
 MAJOR.MINOR.PATCH
 
 Examples:
-v1.0.0 → first stable release
-v1.1.0 → new feature added
-v1.1.1 → bug fix
+v1.0.0 → Initial stable release
+v1.1.0 → Feature addition
+v1.1.1 → Bug fix
+Each semantic version tag triggers:
+CI validation
+Docker image build
+Registry publishing
+Final submission tag:m2-submission
 
-Final submission tag:
-m2-submission
-
-Tags are created using:
+Created using:
 git tag m2-submission
 git push --tags
-This ensures traceable releases.
+This ensures reproducibility and traceable grading state.
 
 ## 6. Troubleshooting Guide
 Issue 1: CI fails but works locally
-Cause:
+Possible causes:
 Missing dependency
-Incorrect import path
-Environment differences
+Incorrect PYTHONPATH
+Python version mismatch
 
-Solution:
+Solutions:
 Ensure dependencies are pinned
-Add __init__.py in app directory
-Run pytest locally before pushing
-
+Confirm __init__.py exists in app/
+Match local Python version with CI (3.11)
+Run pytest -v locally before pushing
 Issue 2: Docker image fails to build
-Cause:
+
+Possible causes:
 Incorrect COPY paths
 Missing requirements.txt
+Incorrect build context
 
-Solution:
+Solutions:
 Verify Dockerfile paths
-Ensure context is correct during docker build
+Ensure build is run from correct directory
+Confirm final . is included in docker build command
 
-Issue 3: Tests fail in GitHub but not locally
-Cause:
-Python version mismatch
-Missing test dependencies
+Issue 3: Docker push fails
+Possible causes:
+Invalid Docker tag format
+Incorrect Docker Hub credentials
+Secrets misconfigured in GitHub
 
-Solution:
-Ensure CI Python version matches local version
-Install test requirements
-End of Runbook.
+Solutions:
+Recreate DOCKERHUB_USERNAME secret
+Regenerate Docker Hub access token
+Verify semantic version tag format
 
-CI Pipeline Summary
-Triggered on semantic tag push
-Runs tests before build
-Fails fast if tests break
-Builds container only after successful validation
+## CI Pipeline Summary
+Triggered on semantic version tag push
+Executes automated tests
+Fails fast on errors
+Builds multi-stage Docker image
+Publishes versioned container to Docker Hub
+Ensures reproducible ML inference deployment

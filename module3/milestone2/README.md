@@ -51,8 +51,9 @@ pytest -v
 Build image:
 docker build -t ml-service .
 ![Docker Hub Tag](screenshots/ml_service.png)
-Run container:
-docker run -p 8000:8000 ml-service
+
+docker pull carmenwang/ml-service:v1.0.36
+docker run -p 8000:8000 carmenwang/ml-service:v1.0.36
 ---
 ## CI/CD Workflow
 The pipeline is triggered on semantic version tags:
@@ -86,6 +87,12 @@ Dockerfile design includes:
 - `--no-cache-dir` installation
 - Minimal runtime footprint
 - Reduced attack surface
+
+## Image Size Optimization
+Measured using: docker images
+Single-stage image size: 232MB
+Multi-stage image size: 213MB
+Size reduction: 8%
 ---
 
 ## Key Concepts Demonstrated
@@ -96,7 +103,7 @@ Dockerfile design includes:
 - Semantic versioning workflow
 - Automated container publishing
 
-Versioning Strategy
+## Versioning Strategy
 We follow semantic versioning:
 MAJOR.MINOR.PATCH
 Tags trigger CI build & Docker publish workflow.
